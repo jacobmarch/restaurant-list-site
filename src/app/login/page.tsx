@@ -40,7 +40,7 @@ export default function LoginPage() {
             Our Restaurant Visits
           </p>
           <p className="mt-2 text-sm text-stone-500">
-            Sign in to view and add our memories
+            I love you!
           </p>
         </div>
 
