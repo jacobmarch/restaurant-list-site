@@ -19,11 +19,10 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 
 2. **Configure environment**
 
-   Copy `.env.local.example` to `.env.local` and fill in your Supabase credentials:
+   Copy `.env.local.example` to `.env.local` and fill in your Supabase credentials from **Project Settings → API**:
 
-   ```bash
-   cp .env.local.example .env.local
-   ```
+   - `NEXT_PUBLIC_SUPABASE_URL` — the **Project URL** (e.g. `https://abcdefgh.supabase.co`). Do **not** append `/rest/v1/`.
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the **anon public** key
 
 3. **Set up Supabase**
 
