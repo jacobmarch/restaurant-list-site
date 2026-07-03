@@ -112,7 +112,7 @@ export function RestaurantAutocomplete({
             <li key={restaurant.id} role="option" aria-selected={index === highlightedIndex}>
               <button
                 type="button"
-                className={`flex min-h-11 w-full items-center px-4 py-2.5 text-left text-sm transition ${
+                className={`flex min-h-11 w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm transition ${
                   index === highlightedIndex
                     ? "bg-rose-50 text-rose-700"
                     : "text-stone-700 hover:bg-stone-50"

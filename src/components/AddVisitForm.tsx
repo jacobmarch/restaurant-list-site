@@ -120,7 +120,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-xl bg-rose-500 px-4 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full cursor-pointer rounded-xl bg-rose-500 px-4 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Saving…" : "Save visit"}
         </button>

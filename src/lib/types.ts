@@ -16,6 +16,13 @@ export type RestaurantWithVisits = {
   visits: Visit[];
 };
 
+export type TimelineVisit = {
+  id: string;
+  restaurantName: string;
+  visited_at: string;
+  notes: string | null;
+};
+
 export type AddVisitState = {
   success?: boolean;
   error?: string;
