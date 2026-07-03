@@ -72,16 +72,47 @@ export async function addVisit(
 
   const visitedAtIso = new Date(`${visitedAt}T12:00:00`).toISOString();
 
-  const { error: visitError } = await supabase.from("visits").insert({
-    restaurant_id: targetRestaurantId,
-    visited_at: visitedAtIso,
-    notes,
-  });
+  const { data: visit, error: visitError } = await supabase
+    .from("visits")
+    .insert({
+      restaurant_id: targetRestaurantId,
+      visited_at: visitedAtIso,
+      notes,
+    })
+    .select("id")
+    .single();
 
   if (visitError) {
     return { error: visitError.message };
   }
 
   revalidatePath("/");
-  return { success: true };
+  return { success: true, visitId: visit.id };
+}
+
+export async function setVisitImage(
+  visitId: string,
+  imagePath: string,
+): Promise<{ error?: string }> {
+  const trimmedVisitId = visitId.trim();
+  const trimmedImagePath = imagePath.trim();
+
+  if (!trimmedVisitId || !trimmedImagePath) {
+    return { error: "Missing visit or image path." };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("visits")
+    .update({ image_path: trimmedImagePath })
+    .eq("id", trimmedVisitId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/timeline");
+  return {};
 }

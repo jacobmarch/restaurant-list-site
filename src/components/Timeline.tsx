@@ -1,6 +1,7 @@
 import { Fragment } from "react";
-import type { TimelineVisit } from "@/lib/types";
+import { VisitImageLightbox } from "@/components/VisitImageLightbox";
 import { formatMonthLabel, formatVisitDate } from "@/lib/format";
+import type { TimelineVisit } from "@/lib/types";
 
 type TimelineProps = {
   visits: TimelineVisit[];
@@ -57,6 +58,12 @@ export function Timeline({ visits }: TimelineProps) {
                   <h3 className="mt-1 font-display text-lg font-semibold text-stone-800">
                     {visit.restaurantName}
                   </h3>
+                  {visit.image_path ? (
+                    <VisitImageLightbox
+                      imagePath={visit.image_path}
+                      alt={`Photo from visit to ${visit.restaurantName}`}
+                    />
+                  ) : null}
                   {visit.notes ? (
                     <p className="mt-2 text-sm italic text-stone-500">
                       &ldquo;{visit.notes}&rdquo;

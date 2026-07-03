@@ -8,6 +8,7 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 - Smart restaurant name formatting and duplicate detection
 - Autocomplete when adding visits to existing restaurants
 - Timeline grouped by restaurant with visit notes
+- Optional photo per visit on the timeline
 
 ## Local development
 
@@ -28,6 +29,7 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 
    - Create a project at [supabase.com](https://supabase.com)
    - Run the SQL in [`supabase/migrations/20260703000000_initial_schema.sql`](supabase/migrations/20260703000000_initial_schema.sql) in the Supabase SQL Editor
+   - Run the SQL in [`supabase/migrations/20260703010000_visit_images.sql`](supabase/migrations/20260703010000_visit_images.sql) for visit photo uploads
    - Go to **Authentication → Providers → Email** and **disable sign-ups**
    - Create your two accounts under **Authentication → Users**
    - Under **Authentication → URL Configuration**, add `http://localhost:3000` to Site URL and Redirect URLs

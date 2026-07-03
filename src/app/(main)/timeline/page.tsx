@@ -7,7 +7,7 @@ export default async function TimelinePage() {
 
   const { data, error } = await supabase
     .from("restaurants")
-    .select("id, name, visits(id, visited_at, notes)");
+    .select("id, name, visits(id, visited_at, notes, image_path)");
 
   if (error) {
     throw new Error(error.message);
@@ -22,6 +22,7 @@ export default async function TimelinePage() {
         restaurantName: restaurant.name,
         visited_at: visit.visited_at,
         notes: visit.notes,
+        image_path: visit.image_path,
       })),
     )
     .sort(
@@ -36,7 +37,7 @@ export default async function TimelinePage() {
           Our timeline
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Every visit, newest first — scroll down for the story so far.
+          Every restaurant we&apos;ve visited, newest first.
         </p>
       </div>
       <Timeline visits={visits} />

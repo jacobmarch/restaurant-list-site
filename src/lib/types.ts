@@ -8,6 +8,7 @@ export type Visit = {
   id: string;
   visited_at: string;
   notes: string | null;
+  image_path: string | null;
 };
 
 export type RestaurantWithVisits = {
@@ -21,9 +22,11 @@ export type TimelineVisit = {
   restaurantName: string;
   visited_at: string;
   notes: string | null;
+  image_path: string | null;
 };
 
 export type AddVisitState = {
   success?: boolean;
   error?: string;
+  visitId?: string;
 };
