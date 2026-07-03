@@ -4,9 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
+// Only the two of us use this site, so instead of remembering the fake email
+// addresses, we log in with a bare username and append the shared domain here.
+const EMAIL_DOMAIN = "@restaurantvisits.com";
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +22,7 @@ export default function LoginPage() {
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+      email: `${username.trim()}${EMAIL_DOMAIN}`,
       password,
     });
 
@@ -50,19 +54,21 @@ export default function LoginPage() {
         >
           <div>
             <label
-              htmlFor="email"
+              htmlFor="username"
               className="mb-1.5 block text-sm font-medium text-stone-700"
             >
-              Email
+              Username
             </label>
             <input
-              id="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
+              id="username"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="username"
               required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
               className="w-full rounded-xl border border-stone-200 px-4 py-3 text-base outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
             />
           </div>
