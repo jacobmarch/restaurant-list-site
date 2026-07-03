@@ -13,11 +13,35 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
+const siteName = "Our Restaurant Visits";
+const siteDescription =
+  "A shared diary of every restaurant we've visited together.";
+
 export const metadata: Metadata = {
-  title: "Our Restaurant Visits",
-  description: "A shared diary of every restaurant we've visited together.",
-  icons: {
-    icon: "/icon.svg",
+  metadataBase: new URL("https://ourrestaurantvisits.com"),
+  title: {
+    default: siteName,
+    template: `%s · ${siteName}`,
+  },
+  description: siteDescription,
+  applicationName: siteName,
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "default",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://ourrestaurantvisits.com",
+    siteName,
+    title: siteName,
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary",
+    title: siteName,
+    description: siteDescription,
   },
 };
 
