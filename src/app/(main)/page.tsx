@@ -22,7 +22,15 @@ export default async function HomePage() {
   }));
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 px-4 py-6">
+    <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <div>
+        <h1 className="font-display text-2xl font-semibold text-stone-800">
+          Add a visit
+        </h1>
+        <p className="mt-1 text-sm text-stone-500">
+          Log a new restaurant memory while it&apos;s fresh.
+        </p>
+      </div>
       <AddVisitForm restaurants={restaurantOptions} />
       <Link
         href="/timeline"
