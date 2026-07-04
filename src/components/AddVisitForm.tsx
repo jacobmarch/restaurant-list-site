@@ -159,10 +159,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-rose-100/60">
-      <h2 className="font-display text-lg font-semibold text-stone-800">
-        Add a visit
-      </h2>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="hidden"
           name="restaurantId"
