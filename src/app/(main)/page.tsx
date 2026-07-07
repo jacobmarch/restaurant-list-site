@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AddVisitForm } from "@/components/AddVisitForm";
+import { RandomizerButton } from "@/components/RandomizerButton";
 import type { Restaurant } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -23,6 +24,7 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <RandomizerButton restaurants={restaurantOptions} />
       <div>
         <h1 className="font-display text-2xl font-semibold text-stone-800">
           Add a visit
