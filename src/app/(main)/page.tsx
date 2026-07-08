@@ -24,7 +24,6 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
-      <RandomizerButton restaurants={restaurantOptions} />
       <div>
         <h1 className="font-display text-2xl font-semibold text-stone-800">
           Add a visit
@@ -34,6 +33,7 @@ export default async function HomePage() {
         </p>
       </div>
       <AddVisitForm restaurants={restaurantOptions} />
+      <RandomizerButton restaurants={restaurantOptions} />
       <Link
         href="/timeline"
         className="flex items-center justify-center gap-1 rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-600 shadow-sm transition-colors hover:bg-rose-50"
