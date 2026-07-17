@@ -1,8 +1,11 @@
-import { Suspense } from "react";
-import { TimelineContentSkeleton } from "@/components/MainPageSkeleton";
-import { TimelineContent } from "@/components/TimelineContent";
+"use client";
+
+import { useAppData } from "@/components/AppDataProvider";
+import { Timeline } from "@/components/Timeline";
 
 export default function TimelinePage() {
+  const { visits } = useAppData();
+
   return (
     <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       <div>
@@ -13,16 +16,7 @@ export default function TimelinePage() {
           Every restaurant we&apos;ve visited, newest first.
         </p>
       </div>
-      <Suspense
-        fallback={
-          <>
-            <span className="sr-only">Loading timeline…</span>
-            <TimelineContentSkeleton />
-          </>
-        }
-      >
-        <TimelineContent />
-      </Suspense>
+      <Timeline visits={visits} />
     </main>
   );
 }

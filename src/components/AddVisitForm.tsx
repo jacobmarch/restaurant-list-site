@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { addVisit, setVisitImage } from "@/app/actions/visits";
+import { useAppData } from "@/components/AppDataProvider";
 import {
   validateVisitImage,
   visitImageStoragePath,
@@ -26,6 +27,7 @@ type AddVisitFormProps = {
 const initialState: AddVisitState = {};
 
 export function AddVisitForm({ restaurants }: AddVisitFormProps) {
+  const { refresh } = useAppData();
   const [state, setState] = useState<AddVisitState>(initialState);
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
@@ -113,6 +115,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
       if (!selectedImage) {
         setState(result);
         resetForm();
+        refresh();
         return;
       }
 
@@ -134,6 +137,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
             error: "Visit saved, but photo failed to upload — try again later.",
           });
           resetForm();
+          refresh();
           return;
         }
 
@@ -144,11 +148,13 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
             error: "Visit saved, but photo failed to save — try again later.",
           });
           resetForm();
+          refresh();
           return;
         }
 
         setState({ success: true });
         resetForm();
+        refresh();
       } finally {
         setIsUploading(false);
       }

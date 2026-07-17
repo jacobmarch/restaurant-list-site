@@ -25,11 +25,12 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  // getUser() also refreshes the session cookies when needed. This project still
+  // uses HS256 JWTs, so getClaims() cannot verify locally and a null claims
+  // result was incorrectly redirecting authenticated navigations to /login.
   const {
-    data: claimsData,
-  } = await supabase.auth.getClaims();
-
-  const user = claimsData?.claims;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 

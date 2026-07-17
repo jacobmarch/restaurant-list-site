@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { Suspense } from "react";
-import { HomeContent } from "@/components/HomeContent";
-import { HomeContentSkeleton } from "@/components/MainPageSkeleton";
+import { AddVisitForm } from "@/components/AddVisitForm";
+import { useAppData } from "@/components/AppDataProvider";
+import { RandomizerButton } from "@/components/RandomizerButton";
 
 export default function HomePage() {
+  const { restaurants } = useAppData();
+
   return (
     <main className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       <div>
@@ -14,9 +18,8 @@ export default function HomePage() {
           Log a new restaurant memory while it&apos;s fresh.
         </p>
       </div>
-      <Suspense fallback={<HomeContentSkeleton />}>
-        <HomeContent />
-      </Suspense>
+      <AddVisitForm restaurants={restaurants} />
+      <RandomizerButton restaurants={restaurants} />
       <Link
         href="/timeline"
         className="flex items-center justify-center gap-1 rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-600 shadow-sm transition-colors hover:bg-rose-50"
