@@ -26,8 +26,10 @@ export async function updateSession(request: NextRequest) {
   );
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: claimsData,
+  } = await supabase.auth.getClaims();
+
+  const user = claimsData?.claims;
 
   const { pathname } = request.nextUrl;
 

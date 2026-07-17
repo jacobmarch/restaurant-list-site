@@ -87,6 +87,7 @@ export async function addVisit(
   }
 
   revalidatePath("/");
+  revalidatePath("/timeline");
   return { success: true, visitId: visit.id };
 }
 
