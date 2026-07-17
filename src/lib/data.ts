@@ -1,7 +1,16 @@
+import { cacheLife, cacheTag } from "next/cache";
+import {
+  RESTAURANTS_CACHE_TAG,
+  TIMELINE_CACHE_TAG,
+} from "@/lib/cache-tags";
 import type { Restaurant, TimelineVisit } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getRestaurants(): Promise<Restaurant[]> {
+  "use cache: private";
+  cacheTag(RESTAURANTS_CACHE_TAG);
+  cacheLife("days");
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -21,6 +30,10 @@ export async function getRestaurants(): Promise<Restaurant[]> {
 }
 
 export async function getTimelineVisits(): Promise<TimelineVisit[]> {
+  "use cache: private";
+  cacheTag(TIMELINE_CACHE_TAG);
+  cacheLife("days");
+
   const supabase = await createClient();
 
   const { data, error } = await supabase

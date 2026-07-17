@@ -1,10 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import {
   formatRestaurantName,
   normalizeRestaurantName,
 } from "@/lib/restaurant-name";
+import {
+  RESTAURANTS_CACHE_TAG,
+  TIMELINE_CACHE_TAG,
+} from "@/lib/cache-tags";
 import type { AddVisitState } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -86,8 +90,8 @@ export async function addVisit(
     return { error: visitError.message };
   }
 
-  revalidatePath("/");
-  revalidatePath("/timeline");
+  updateTag(RESTAURANTS_CACHE_TAG);
+  updateTag(TIMELINE_CACHE_TAG);
   return { success: true, visitId: visit.id };
 }
 
@@ -113,7 +117,6 @@ export async function setVisitImage(
     return { error: error.message };
   }
 
-  revalidatePath("/");
-  revalidatePath("/timeline");
+  updateTag(TIMELINE_CACHE_TAG);
   return {};
 }
