@@ -14,7 +14,8 @@ export default function HomePage() {
           Add a visit
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Log a new restaurant memory while it&apos;s fresh.
+          Log a new restaurant visit and take a picture pls 😊
+     
         </p>
       </div>
       <AddVisitForm restaurants={restaurants} />

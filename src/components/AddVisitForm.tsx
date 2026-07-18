@@ -14,6 +14,7 @@ import {
   AddressAutocomplete,
   type SelectedPlace,
 } from "./AddressAutocomplete";
+import { DatePicker } from "./DatePicker";
 import { RestaurantAutocomplete } from "./RestaurantAutocomplete";
 
 function todayIsoDate(): string {
@@ -199,14 +200,12 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
           >
             Date visited
           </label>
-          <input
+          <DatePicker
             id="visited-at"
             name="visitedAt"
-            type="date"
             required
             value={visitedAt}
-            onChange={(event) => setVisitedAt(event.target.value)}
-            className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-base text-stone-800 shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            onChange={setVisitedAt}
           />
         </div>
 
