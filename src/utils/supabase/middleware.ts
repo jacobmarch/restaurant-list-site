@@ -1,7 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/** Public assets that must never be redirected to /login (or browsers get HTML for JSON/icons). */
+const PUBLIC_ASSET_PATHS = new Set([
+  "/manifest.webmanifest",
+  "/icon",
+  "/apple-icon",
+]);
+
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (PUBLIC_ASSET_PATHS.has(pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -31,8 +44,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
 
   if (!user && pathname !== "/login") {
     const url = request.nextUrl.clone();
