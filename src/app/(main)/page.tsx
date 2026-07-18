@@ -18,7 +18,7 @@ export default function HomePage() {
         </p>
       </div>
       <AddVisitForm restaurants={restaurants} />
-      <RandomizerButton restaurants={restaurants} />
+      <RandomizerButton />
     </main>
   );
 }

@@ -22,6 +22,7 @@ export type RestaurantWithVisits = {
 
 export type TimelineVisit = {
   id: string;
+  restaurant_id: string;
   restaurantName: string;
   visited_at: string;
   notes: string | null;

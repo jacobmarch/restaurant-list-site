@@ -9,7 +9,6 @@ export function Header() {
           <p className="font-display text-lg font-semibold tracking-tight text-stone-800 sm:text-xl">
             Our Restaurant Visits
           </p>
-          <p className="text-xs text-stone-500">Every meal, every memory</p>
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
           <Nav />
