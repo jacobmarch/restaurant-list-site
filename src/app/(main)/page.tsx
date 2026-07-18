@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { AddVisitForm } from "@/components/AddVisitForm";
 import { useAppData } from "@/components/AppDataProvider";
 import { RandomizerButton } from "@/components/RandomizerButton";
@@ -20,13 +19,6 @@ export default function HomePage() {
       </div>
       <AddVisitForm restaurants={restaurants} />
       <RandomizerButton restaurants={restaurants} />
-      <Link
-        href="/timeline"
-        className="flex items-center justify-center gap-1 rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-600 shadow-sm transition-colors hover:bg-rose-50"
-      >
-        View our timeline
-        <span aria-hidden>→</span>
-      </Link>
     </main>
   );
 }
