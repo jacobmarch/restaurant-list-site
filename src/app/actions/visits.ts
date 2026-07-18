@@ -1,6 +1,7 @@
 "use server";
 
 import { updateTag } from "next/cache";
+import { geocodeAddress } from "@/lib/geocode";
 import {
   formatRestaurantName,
   normalizeRestaurantName,
@@ -12,6 +13,72 @@ import {
 import type { AddVisitState } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
+type VisitLocation = {
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+};
+
+async function requireAuthenticatedClient() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { error: "Your session expired. Please sign in again." } as const;
+  }
+
+  return { supabase } as const;
+}
+
+function parseOptionalCoord(raw: FormDataEntryValue | string | null): number | null {
+  if (raw == null) {
+    return null;
+  }
+
+  const value = String(raw).trim();
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+async function resolveVisitLocation(
+  rawAddress: string,
+  clientLat: number | null = null,
+  clientLng: number | null = null,
+): Promise<VisitLocation | { error: string }> {
+  const trimmed = rawAddress.trim();
+
+  if (!trimmed) {
+    return { address: null, lat: null, lng: null };
+  }
+
+  if (clientLat != null && clientLng != null) {
+    return {
+      address: trimmed,
+      lat: clientLat,
+      lng: clientLng,
+    };
+  }
+
+  const result = await geocodeAddress(trimmed);
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  return {
+    address: trimmed,
+    lat: result.lat,
+    lng: result.lng,
+  };
+}
+
 export async function addVisit(
   _prevState: AddVisitState,
   formData: FormData,
@@ -21,6 +88,9 @@ export async function addVisit(
   const visitedAt = String(formData.get("visitedAt") ?? "").trim();
   const notesRaw = String(formData.get("notes") ?? "").trim();
   const notes = notesRaw || null;
+  const rawAddress = String(formData.get("address") ?? "").trim();
+  const clientLat = parseOptionalCoord(formData.get("lat"));
+  const clientLng = parseOptionalCoord(formData.get("lng"));
 
   if (!rawName) {
     return { error: "Please enter a restaurant name." };
@@ -30,8 +100,20 @@ export async function addVisit(
     return { error: "Please select a visit date." };
   }
 
+  const auth = await requireAuthenticatedClient();
+
+  if ("error" in auth) {
+    return { error: auth.error };
+  }
+
+  const { supabase } = auth;
+  const location = await resolveVisitLocation(rawAddress, clientLat, clientLng);
+
+  if ("error" in location) {
+    return { error: location.error };
+  }
+
   const displayName = formatRestaurantName(rawName);
-  const supabase = await createClient();
 
   let targetRestaurantId = restaurantId;
 
@@ -82,6 +164,9 @@ export async function addVisit(
       restaurant_id: targetRestaurantId,
       visited_at: visitedAtIso,
       notes,
+      address: location.address,
+      lat: location.lat,
+      lng: location.lng,
     })
     .select("id")
     .single();
@@ -95,6 +180,53 @@ export async function addVisit(
   return { success: true, visitId: visit.id };
 }
 
+export async function updateVisitAddress(
+  visitId: string,
+  address: string,
+  lat?: number | null,
+  lng?: number | null,
+): Promise<{ error?: string }> {
+  const trimmedVisitId = visitId.trim();
+
+  if (!trimmedVisitId) {
+    return { error: "Missing visit." };
+  }
+
+  const auth = await requireAuthenticatedClient();
+
+  if ("error" in auth) {
+    return { error: auth.error };
+  }
+
+  const location = await resolveVisitLocation(
+    address,
+    lat ?? null,
+    lng ?? null,
+  );
+
+  if ("error" in location) {
+    return { error: location.error };
+  }
+
+  const { supabase } = auth;
+
+  const { error } = await supabase
+    .from("visits")
+    .update({
+      address: location.address,
+      lat: location.lat,
+      lng: location.lng,
+    })
+    .eq("id", trimmedVisitId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  updateTag(TIMELINE_CACHE_TAG);
+  return {};
+}
+
 export async function setVisitImage(
   visitId: string,
   imagePath: string,
@@ -106,7 +238,13 @@ export async function setVisitImage(
     return { error: "Missing visit or image path." };
   }
 
-  const supabase = await createClient();
+  const auth = await requireAuthenticatedClient();
+
+  if ("error" in auth) {
+    return { error: auth.error };
+  }
+
+  const { supabase } = auth;
 
   const { error } = await supabase
     .from("visits")

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { VisitAddressEditor } from "@/components/VisitAddressEditor";
 import { VisitImageLightbox } from "@/components/VisitImageLightbox";
 import { formatMonthLabel, formatVisitDate } from "@/lib/format";
 import type { TimelineVisit } from "@/lib/types";
@@ -58,6 +59,10 @@ export function Timeline({ visits }: TimelineProps) {
                   <h3 className="mt-1 font-display text-lg font-semibold text-stone-800">
                     {visit.restaurantName}
                   </h3>
+                  <VisitAddressEditor
+                    visitId={visit.id}
+                    address={visit.address}
+                  />
                   {visit.image_path ? (
                     <VisitImageLightbox
                       imagePath={visit.image_path}

@@ -9,6 +9,8 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 - Autocomplete when adding visits to existing restaurants
 - Timeline grouped by restaurant with visit notes
 - Optional photo per visit on the timeline
+- Optional address per visit with Geoapify autocomplete suggestions
+- Map view of all visits with a saved location
 
 ## Local development
 
@@ -24,12 +26,14 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 
    - `NEXT_PUBLIC_SUPABASE_URL` — the **Project URL** (e.g. `https://abcdefgh.supabase.co`). Do **not** append `/rest/v1/`.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the **anon public** key
+   - `NEXT_PUBLIC_GEOAPIFY_API_KEY` — free key from [Geoapify MyProjects](https://www.geoapify.com/). Restrict by HTTP referrer for `http://localhost:3000` and your production domain.
 
 3. **Set up Supabase**
 
    - Create a project at [supabase.com](https://supabase.com)
    - Run the SQL in [`supabase/migrations/20260703000000_initial_schema.sql`](supabase/migrations/20260703000000_initial_schema.sql) in the Supabase SQL Editor
    - Run the SQL in [`supabase/migrations/20260703010000_visit_images.sql`](supabase/migrations/20260703010000_visit_images.sql) for visit photo uploads
+   - Run the SQL in [`supabase/migrations/20260718000000_visit_location.sql`](supabase/migrations/20260718000000_visit_location.sql) for visit addresses and map pins
    - Go to **Authentication → Providers → Email** and **disable sign-ups**
    - Create your two accounts under **Authentication → Users**
    - Under **Authentication → URL Configuration**, add `http://localhost:3000` to Site URL and Redirect URLs
@@ -49,6 +53,7 @@ A private, mobile-first web app for tracking every restaurant you've visited tog
 3. Add environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_GEOAPIFY_API_KEY`
 4. Deploy
 5. In Supabase **Authentication → URL Configuration**, add your Vercel production URL to Site URL and Redirect URLs
 

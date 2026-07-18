@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/", label: "Add" },
   { href: "/timeline", label: "Timeline" },
+  { href: "/map", label: "Map" },
 ];
 
 export function Nav() {
@@ -17,10 +18,10 @@ export function Nav() {
 
   return (
     <nav className="relative inline-flex rounded-full bg-rose-50 p-1">
-      {/* Sliding indicator that animates between the two segments. */}
+      {/* Sliding indicator that animates between the three segments. */}
       <span
         aria-hidden
-        className="absolute inset-y-1 left-1 w-24 rounded-full bg-white shadow-sm transition-transform duration-300 ease-out"
+        className="absolute inset-y-1 left-1 w-20 rounded-full bg-white shadow-sm transition-transform duration-300 ease-out sm:w-24"
         style={{ transform: `translateX(${activeIndex * 100}%)` }}
       />
       {links.map((link) => {
@@ -30,7 +31,7 @@ export function Nav() {
             key={link.href}
             href={link.href}
             aria-current={isActive ? "page" : undefined}
-            className={`relative z-10 w-24 cursor-pointer rounded-full py-1.5 text-center text-sm font-medium transition-colors ${
+            className={`relative z-10 w-20 cursor-pointer rounded-full py-1.5 text-center text-sm font-medium transition-colors sm:w-24 ${
               isActive ? "text-rose-600" : "text-stone-500 hover:text-rose-500"
             }`}
           >

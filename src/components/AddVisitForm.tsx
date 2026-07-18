@@ -10,6 +10,10 @@ import {
 } from "@/lib/storage";
 import type { AddVisitState, Restaurant } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
+import {
+  AddressAutocomplete,
+  type SelectedPlace,
+} from "./AddressAutocomplete";
 import { RestaurantAutocomplete } from "./RestaurantAutocomplete";
 
 function todayIsoDate(): string {
@@ -37,6 +41,10 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
   );
   const [visitedAt, setVisitedAt] = useState(todayIsoDate);
   const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(
+    null,
+  );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +62,8 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
     setSelectedRestaurantId(null);
     setVisitedAt(todayIsoDate());
     setNotes("");
+    setAddress("");
+    setSelectedPlace(null);
     setSelectedImage(null);
     if (imagePreviewUrl) {
       URL.revokeObjectURL(imagePreviewUrl);
@@ -199,6 +209,23 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
             className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-base text-stone-800 shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
         </div>
+
+        <input
+          type="hidden"
+          name="lat"
+          value={selectedPlace?.lat ?? ""}
+        />
+        <input
+          type="hidden"
+          name="lng"
+          value={selectedPlace?.lng ?? ""}
+        />
+
+        <AddressAutocomplete
+          value={address}
+          onValueChange={setAddress}
+          onPlaceSelect={setSelectedPlace}
+        />
 
         <div>
           <label

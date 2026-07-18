@@ -9,6 +9,9 @@ export type Visit = {
   visited_at: string;
   notes: string | null;
   image_path: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 export type RestaurantWithVisits = {
@@ -23,6 +26,9 @@ export type TimelineVisit = {
   visited_at: string;
   notes: string | null;
   image_path: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 export type AddVisitState = {
