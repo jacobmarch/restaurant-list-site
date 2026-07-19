@@ -12,6 +12,7 @@ export type Visit = {
   address: string | null;
   lat: number | null;
   lng: number | null;
+  rating: number;
 };
 
 export type RestaurantWithVisits = {
@@ -30,6 +31,7 @@ export type TimelineVisit = {
   address: string | null;
   lat: number | null;
   lng: number | null;
+  rating: number;
 };
 
 export type AddVisitState = {

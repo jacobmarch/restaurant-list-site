@@ -10,6 +10,7 @@ import {
   RESTAURANTS_CACHE_TAG,
   TIMELINE_CACHE_TAG,
 } from "@/lib/cache-tags";
+import { parseRating } from "@/lib/rating";
 import type { AddVisitState } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -91,6 +92,7 @@ export async function addVisit(
   const rawAddress = String(formData.get("address") ?? "").trim();
   const clientLat = parseOptionalCoord(formData.get("lat"));
   const clientLng = parseOptionalCoord(formData.get("lng"));
+  const rating = parseRating(formData.get("rating"));
 
   if (!rawName) {
     return { error: "Please enter a restaurant name." };
@@ -98,6 +100,10 @@ export async function addVisit(
 
   if (!visitedAt) {
     return { error: "Please select a visit date." };
+  }
+
+  if (rating == null) {
+    return { error: "Please select a rating from 1 to 5 stars." };
   }
 
   const auth = await requireAuthenticatedClient();
@@ -167,6 +173,7 @@ export async function addVisit(
       address: location.address,
       lat: location.lat,
       lng: location.lng,
+      rating,
     })
     .select("id")
     .single();
@@ -217,6 +224,42 @@ export async function updateVisitAddress(
       lat: location.lat,
       lng: location.lng,
     })
+    .eq("id", trimmedVisitId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  updateTag(TIMELINE_CACHE_TAG);
+  return {};
+}
+
+export async function updateVisitRating(
+  visitId: string,
+  rating: number,
+): Promise<{ error?: string }> {
+  const trimmedVisitId = visitId.trim();
+  const parsed = parseRating(String(rating));
+
+  if (!trimmedVisitId) {
+    return { error: "Missing visit." };
+  }
+
+  if (parsed == null) {
+    return { error: "Please select a rating from 1 to 5 stars." };
+  }
+
+  const auth = await requireAuthenticatedClient();
+
+  if ("error" in auth) {
+    return { error: auth.error };
+  }
+
+  const { supabase } = auth;
+
+  const { error } = await supabase
+    .from("visits")
+    .update({ rating: parsed })
     .eq("id", trimmedVisitId);
 
   if (error) {

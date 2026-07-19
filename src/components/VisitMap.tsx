@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { formatVisitDate } from "@/lib/format";
+import { formatStarGlyphs } from "@/lib/rating";
 import { getVisitImageUrl } from "@/lib/storage";
 import type { TimelineVisit } from "@/lib/types";
 
@@ -107,6 +108,7 @@ function buildVisitPopupHtml(visit: TimelineVisit): string {
     `<div style="max-width:200px;font-family:inherit;color:#44403c;">`,
     `<p style="margin:0;font-size:0.95rem;font-weight:600;line-height:1.3;">${escapeHtml(visit.restaurantName)}</p>`,
     `<p style="margin:0.25rem 0 0;font-size:0.7rem;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#fb7185;">${escapeHtml(formatVisitDate(visit.visited_at))}</p>`,
+    `<p style="margin:0.35rem 0 0;font-size:0.85rem;letter-spacing:0.06em;color:#f43f5e;" aria-label="${visit.rating} out of 5 stars">${escapeHtml(formatStarGlyphs(visit.rating))}</p>`,
   ];
 
   if (visit.image_path) {

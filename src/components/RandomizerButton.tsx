@@ -6,11 +6,17 @@ import {
   type SelectedPlace,
 } from "@/components/AddressAutocomplete";
 import { useAppData } from "@/components/AppDataProvider";
+import { StarRating } from "@/components/StarRating";
 import {
   haversineMiles,
   type LatLng,
 } from "@/lib/distance";
 import { formatVisitDate } from "@/lib/format";
+import {
+  formatAverageRating,
+  MAX_RATING,
+  MIN_RATING,
+} from "@/lib/rating";
 import type { Restaurant, TimelineVisit } from "@/lib/types";
 
 type PickCount = 1 | 3 | 5;
@@ -20,12 +26,14 @@ type RestaurantCandidate = {
   distanceMiles: number | null;
   address: string | null;
   lastVisitedAt: string | null;
+  avgRating: number | null;
 };
 
 type OriginSource = "gps" | "address" | null;
 
 const PICK_COUNTS: PickCount[] = [1, 3, 5];
 const DEFAULT_RADIUS_MILES = 15;
+const DEFAULT_MIN_RATING = 4;
 
 function pickRandomMany(
   pool: RestaurantCandidate[],
@@ -69,6 +77,8 @@ function buildCandidates(
   filterByDistance: boolean,
   origin: LatLng | null,
   radiusMiles: number,
+  filterByRating: boolean,
+  minRating: number,
 ): RestaurantCandidate[] {
   if (filterByDistance && (!origin || !Number.isFinite(radiusMiles) || radiusMiles <= 0)) {
     return [];
@@ -78,6 +88,10 @@ function buildCandidates(
     lastVisitedAt: string;
     address: string | null;
     distanceMiles: number | null;
+    ratingSum: number;
+    ratingCount: number;
+    /** True when at least one visit is within the distance radius (when filtering). */
+    inDistanceRange: boolean;
   };
 
   const metaByRestaurant = new Map<string, VisitMeta>();
@@ -90,19 +104,18 @@ function buildCandidates(
       Number.isFinite(visit.lng);
 
     let distanceMiles: number | null = null;
+    let withinRadius = !filterByDistance;
 
     if (filterByDistance) {
-      if (!hasCoords || !origin) {
-        continue;
-      }
-
-      distanceMiles = haversineMiles(origin, {
-        lat: visit.lat as number,
-        lng: visit.lng as number,
-      });
-
-      if (distanceMiles > radiusMiles) {
-        continue;
+      if (hasCoords && origin) {
+        distanceMiles = haversineMiles(origin, {
+          lat: visit.lat as number,
+          lng: visit.lng as number,
+        });
+        withinRadius = distanceMiles <= radiusMiles;
+      } else {
+        withinRadius = false;
+        distanceMiles = null;
       }
     }
 
@@ -112,26 +125,35 @@ function buildCandidates(
       metaByRestaurant.set(visit.restaurant_id, {
         lastVisitedAt: visit.visited_at,
         address: visit.address,
-        distanceMiles,
+        distanceMiles: withinRadius ? distanceMiles : null,
+        ratingSum: visit.rating,
+        ratingCount: 1,
+        inDistanceRange: withinRadius,
       });
       continue;
     }
 
     const isNewer = visit.visited_at > existing.lastVisitedAt;
     const isCloser =
+      withinRadius &&
       distanceMiles != null &&
       (existing.distanceMiles == null || distanceMiles < existing.distanceMiles);
 
     const next: VisitMeta = {
       lastVisitedAt: isNewer ? visit.visited_at : existing.lastVisitedAt,
       address: existing.address,
-      distanceMiles:
-        distanceMiles == null
-          ? existing.distanceMiles
-          : existing.distanceMiles == null
-            ? distanceMiles
-            : Math.min(existing.distanceMiles, distanceMiles),
+      distanceMiles: existing.distanceMiles,
+      ratingSum: existing.ratingSum + visit.rating,
+      ratingCount: existing.ratingCount + 1,
+      inDistanceRange: existing.inDistanceRange || withinRadius,
     };
+
+    if (withinRadius && distanceMiles != null) {
+      next.distanceMiles =
+        existing.distanceMiles == null
+          ? distanceMiles
+          : Math.min(existing.distanceMiles, distanceMiles);
+    }
 
     if (filterByDistance) {
       if (isCloser && visit.address) {
@@ -150,18 +172,39 @@ function buildCandidates(
 
   return restaurants
     .filter((restaurant) => {
-      if (!filterByDistance) {
-        return true;
+      const meta = metaByRestaurant.get(restaurant.id);
+
+      if (filterByDistance) {
+        if (!meta?.inDistanceRange) {
+          return false;
+        }
       }
-      return metaByRestaurant.has(restaurant.id);
+
+      if (filterByRating) {
+        if (!meta || meta.ratingCount === 0) {
+          return false;
+        }
+        const avg = meta.ratingSum / meta.ratingCount;
+        if (avg < minRating) {
+          return false;
+        }
+      }
+
+      return true;
     })
     .map((restaurant) => {
       const meta = metaByRestaurant.get(restaurant.id);
+      const avgRating =
+        meta && meta.ratingCount > 0
+          ? meta.ratingSum / meta.ratingCount
+          : null;
+
       return {
         restaurant,
         distanceMiles: filterByDistance ? (meta?.distanceMiles ?? null) : null,
         address: meta?.address ?? null,
         lastVisitedAt: meta?.lastVisitedAt ?? null,
+        avgRating,
       };
     });
 }
@@ -182,6 +225,8 @@ export function RandomizerButton() {
   const [filterByDistance, setFilterByDistance] = useState(false);
   const [radiusMiles, setRadiusMiles] = useState(DEFAULT_RADIUS_MILES);
   const [radiusInput, setRadiusInput] = useState(String(DEFAULT_RADIUS_MILES));
+  const [filterByRating, setFilterByRating] = useState(false);
+  const [minRating, setMinRating] = useState(DEFAULT_MIN_RATING);
   const [origin, setOrigin] = useState<LatLng | null>(null);
   const [originSource, setOriginSource] = useState<OriginSource>(null);
   const [originLabel, setOriginLabel] = useState<string | null>(null);
@@ -201,13 +246,24 @@ export function RandomizerButton() {
         filterByDistance,
         origin,
         radiusMiles,
+        filterByRating,
+        minRating,
       ),
-    [restaurants, visits, filterByDistance, origin, radiusMiles],
+    [
+      restaurants,
+      visits,
+      filterByDistance,
+      origin,
+      radiusMiles,
+      filterByRating,
+      minRating,
+    ],
   );
 
   const canRoll =
     hasRestaurants &&
-    (!filterByDistance || (origin != null && candidates.length > 0));
+    (!filterByDistance || (origin != null && candidates.length > 0)) &&
+    (!filterByRating || candidates.length > 0);
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -336,9 +392,13 @@ export function RandomizerButton() {
     ? null
     : filterByDistance && origin == null
       ? "Set your location or an address to filter by distance."
-      : filterByDistance && candidates.length === 0
-        ? `No visited places within ${radiusMiles} miles. Add locations to visits, or widen the radius.`
-        : null;
+      : candidates.length === 0 && filterByDistance && filterByRating
+        ? `No places within ${radiusMiles} miles averaging at least ${minRating} stars. Widen the radius or lower the minimum.`
+        : candidates.length === 0 && filterByDistance
+          ? `No visited places within ${radiusMiles} miles. Add locations to visits, or widen the radius.`
+          : candidates.length === 0 && filterByRating
+            ? `No places with an average of at least ${minRating} stars. Lower the minimum or rate more visits.`
+            : null;
 
   return (
     <>
@@ -509,6 +569,45 @@ export function RandomizerButton() {
                     ) : null}
                   </div>
 
+                  <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/80 p-3">
+                    <label className="flex cursor-pointer items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={filterByRating}
+                        onChange={(event) => {
+                          setFilterByRating(event.target.checked);
+                          setPicked([]);
+                        }}
+                        className="size-4 rounded border-stone-300 text-rose-500 focus:ring-rose-200"
+                      />
+                      <span className="text-sm font-medium text-stone-700">
+                        Only places rated at least…
+                      </span>
+                    </label>
+
+                    {filterByRating ? (
+                      <div className="space-y-2 pl-0.5">
+                        <StarRating
+                          value={minRating}
+                          onChange={(value) => {
+                            setMinRating(value);
+                            setPicked([]);
+                          }}
+                          size="sm"
+                          label={`Minimum average (${MIN_RATING}–${MAX_RATING})`}
+                          name="minRating"
+                          id="min-rating"
+                          required
+                        />
+                        <p className="text-xs text-stone-500">
+                          {candidates.length}{" "}
+                          {candidates.length === 1 ? "place" : "places"} with an
+                          average of {minRating}+ stars
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+
                   <button
                     type="button"
                     onClick={handleRoll}
@@ -547,15 +646,35 @@ export function RandomizerButton() {
                               </p>
                             ) : null}
                             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-stone-500">
-                              {item.lastVisitedAt ? (
-                                <span>
-                                  Last visited{" "}
-                                  {formatVisitDate(item.lastVisitedAt)}
+                              {item.avgRating != null ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <StarRating
+                                    mode="display"
+                                    value={item.avgRating}
+                                    size="sm"
+                                    showValue
+                                  />
+                                  <span className="sr-only">
+                                    Average {formatAverageRating(item.avgRating)}{" "}
+                                    stars
+                                  </span>
                                 </span>
+                              ) : null}
+                              {item.lastVisitedAt ? (
+                                <>
+                                  {item.avgRating != null ? (
+                                    <span aria-hidden="true">·</span>
+                                  ) : null}
+                                  <span>
+                                    Last visited{" "}
+                                    {formatVisitDate(item.lastVisitedAt)}
+                                  </span>
+                                </>
                               ) : null}
                               {item.distanceMiles != null ? (
                                 <>
-                                  {item.lastVisitedAt ? (
+                                  {item.avgRating != null ||
+                                  item.lastVisitedAt ? (
                                     <span aria-hidden="true">·</span>
                                   ) : null}
                                   <span>

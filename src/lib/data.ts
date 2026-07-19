@@ -39,7 +39,7 @@ export async function getTimelineVisits(): Promise<TimelineVisit[]> {
   const { data, error } = await supabase
     .from("visits")
     .select(
-      "id, restaurant_id, visited_at, notes, image_path, address, lat, lng, restaurants(name)",
+      "id, restaurant_id, visited_at, notes, image_path, address, lat, lng, rating, restaurants(name)",
     )
     .order("visited_at", { ascending: false });
 
@@ -63,6 +63,7 @@ export async function getTimelineVisits(): Promise<TimelineVisit[]> {
       address: visit.address,
       lat: visit.lat,
       lng: visit.lng,
+      rating: visit.rating,
     };
   });
 }

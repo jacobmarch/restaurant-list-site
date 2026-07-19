@@ -16,6 +16,7 @@ import {
 } from "./AddressAutocomplete";
 import { DatePicker } from "./DatePicker";
 import { RestaurantAutocomplete } from "./RestaurantAutocomplete";
+import { StarRating } from "./StarRating";
 
 function todayIsoDate(): string {
   const now = new Date();
@@ -48,6 +49,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
   );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [rating, setRating] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
     setAddress("");
     setSelectedPlace(null);
     setSelectedImage(null);
+    setRating(null);
     if (imagePreviewUrl) {
       URL.revokeObjectURL(imagePreviewUrl);
     }
@@ -105,6 +108,11 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (rating == null) {
+      setState({ error: "Please select a rating from 1 to 5 stars." });
+      return;
+    }
+
     if (selectedImage) {
       const validationError = validateVisitImage(selectedImage);
       if (validationError) {
@@ -114,6 +122,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
     }
 
     const formData = new FormData(event.currentTarget);
+    formData.set("rating", String(rating));
 
     startTransition(async () => {
       const result = await addVisit(initialState, formData);
@@ -226,6 +235,13 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
           onPlaceSelect={setSelectedPlace}
         />
 
+        <StarRating
+          value={rating}
+          onChange={setRating}
+          disabled={isBusy}
+          required
+        />
+
         <div>
           <label
             htmlFor="notes"
@@ -285,7 +301,7 @@ export function AddVisitForm({ restaurants }: AddVisitFormProps) {
 
         <button
           type="submit"
-          disabled={isBusy}
+          disabled={isBusy || rating == null}
           className="w-full cursor-pointer rounded-xl bg-rose-500 px-4 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isUploading
