@@ -1,5 +1,4 @@
 const VISIT_IMAGES_BUCKET = "visit-images";
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -15,10 +14,6 @@ export function getVisitImageUrl(imagePath: string): string {
 export function validateVisitImage(file: File): string | null {
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return "Please choose a JPEG, PNG, or WebP image.";
-  }
-
-  if (file.size > MAX_IMAGE_BYTES) {
-    return "Image must be 10 MB or smaller.";
   }
 
   return null;
