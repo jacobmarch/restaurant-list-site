@@ -13,7 +13,7 @@ export default function TimelinePage() {
           Our timeline
         </h1>
         <p className="mt-1 text-sm text-stone-500">
-          Every restaurant we&apos;ve visited, newest first.
+          Every visit we&apos;ve logged, newest first.
         </p>
       </div>
       <Timeline visits={visits} />

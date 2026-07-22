@@ -14,9 +14,11 @@ export default function MainLayout({
 }>) {
   return (
     <div className="min-h-full pb-safe">
-      <Header />
       <Suspense>
-        <AppDataShell>{children}</AppDataShell>
+        <AppDataShell>
+          <Header />
+          {children}
+        </AppDataShell>
       </Suspense>
     </div>
   );
