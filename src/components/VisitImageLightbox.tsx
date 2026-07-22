@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { getVisitImageUrl } from "@/lib/storage";
 
@@ -11,12 +10,14 @@ type VisitImageLightboxProps = {
 
 export function VisitImageLightbox({ imagePath, alt }: VisitImageLightboxProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const imageUrl = getVisitImageUrl(imagePath);
 
   const close = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
     if (!isOpen) {
+      setIsLoaded(false);
       return;
     }
 
@@ -41,16 +42,9 @@ export function VisitImageLightbox({ imagePath, alt }: VisitImageLightboxProps) 
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="relative mt-3 block aspect-[4/3] max-h-60 w-full cursor-zoom-in overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
-        aria-label={`View full photo from ${alt}`}
+        className="mt-3 cursor-pointer text-xs font-medium text-rose-500 transition hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
       >
-        <Image
-          src={imageUrl}
-          alt={alt}
-          fill
-          sizes="(max-width: 672px) 100vw, 672px"
-          className="object-cover transition hover:scale-[1.02]"
-        />
+        View image
       </button>
 
       {isOpen ? (
@@ -71,14 +65,20 @@ export function VisitImageLightbox({ imagePath, alt }: VisitImageLightboxProps) 
           </button>
 
           <div
-            className="relative max-h-[90vh] max-w-[90vw]"
+            className="relative flex max-h-[90vh] max-w-[90vw] items-center justify-center"
             onClick={(event) => event.stopPropagation()}
           >
+            {!isLoaded ? (
+              <p className="text-sm font-medium text-white/80">Loading…</p>
+            ) : null}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt={alt}
-              className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+              onLoad={() => setIsLoaded(true)}
+              className={`max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl ${
+                isLoaded ? "block" : "hidden"
+              }`}
             />
           </div>
         </div>
