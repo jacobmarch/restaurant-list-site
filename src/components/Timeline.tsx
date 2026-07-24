@@ -1,8 +1,6 @@
 import { Fragment } from "react";
-import { VisitAddressEditor } from "@/components/VisitAddressEditor";
-import { VisitImageLightbox } from "@/components/VisitImageLightbox";
-import { VisitRatingEditor } from "@/components/VisitRatingEditor";
-import { formatMonthLabel, formatVisitDate } from "@/lib/format";
+import { VisitEditor } from "@/components/VisitEditor";
+import { formatMonthLabel } from "@/lib/format";
 import type { TimelineVisit } from "@/lib/types";
 
 type TimelineProps = {
@@ -50,33 +48,7 @@ export function Timeline({ visits }: TimelineProps) {
                   aria-hidden
                   className="absolute left-2 top-4 h-3 w-3 -translate-x-1/2 rounded-full bg-rose-400 ring-4 ring-stone-50"
                 />
-                <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-rose-100/60">
-                  <time
-                    dateTime={visit.visited_at}
-                    className="text-xs font-medium uppercase tracking-wide text-rose-400"
-                  >
-                    {formatVisitDate(visit.visited_at)}
-                  </time>
-                  <h3 className="mt-1 font-display text-lg font-semibold text-stone-800">
-                    {visit.restaurantName}
-                  </h3>
-                  <VisitRatingEditor visitId={visit.id} rating={visit.rating} />
-                  <VisitAddressEditor
-                    visitId={visit.id}
-                    address={visit.address}
-                  />
-                  {visit.image_path ? (
-                    <VisitImageLightbox
-                      imagePath={visit.image_path}
-                      alt={`Photo from visit to ${visit.restaurantName}`}
-                    />
-                  ) : null}
-                  {visit.notes ? (
-                    <p className="mt-2 text-sm italic text-stone-500">
-                      &ldquo;{visit.notes}&rdquo;
-                    </p>
-                  ) : null}
-                </article>
+                <VisitEditor visit={visit} />
               </li>
             </Fragment>
           );
