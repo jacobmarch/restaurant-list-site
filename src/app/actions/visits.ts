@@ -80,6 +80,56 @@ async function resolveVisitLocation(
   };
 }
 
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+async function resolveRestaurantId(
+  supabase: SupabaseClient,
+  rawName: string,
+  restaurantId: string | null,
+): Promise<{ restaurantId: string } | { error: string }> {
+  if (restaurantId) {
+    return { restaurantId };
+  }
+
+  const displayName = formatRestaurantName(rawName);
+  const normalizedName = normalizeRestaurantName(rawName);
+
+  const { data: existing } = await supabase
+    .from("restaurants")
+    .select("id")
+    .eq("normalized_name", normalizedName)
+    .maybeSingle();
+
+  if (existing) {
+    return { restaurantId: existing.id };
+  }
+
+  const { data: created, error: insertError } = await supabase
+    .from("restaurants")
+    .insert({ name: displayName, normalized_name: normalizedName })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    if (insertError.code === "23505") {
+      const { data: raced } = await supabase
+        .from("restaurants")
+        .select("id")
+        .eq("normalized_name", normalizedName)
+        .single();
+
+      if (!raced) {
+        return { error: "Could not save restaurant. Please try again." };
+      }
+      return { restaurantId: raced.id };
+    }
+
+    return { error: insertError.message };
+  }
+
+  return { restaurantId: created.id };
+}
+
 export async function addVisit(
   _prevState: AddVisitState,
   formData: FormData,
@@ -119,47 +169,10 @@ export async function addVisit(
     return { error: location.error };
   }
 
-  const displayName = formatRestaurantName(rawName);
+  const restaurant = await resolveRestaurantId(supabase, rawName, restaurantId);
 
-  let targetRestaurantId = restaurantId;
-
-  if (!targetRestaurantId) {
-    const normalizedName = normalizeRestaurantName(rawName);
-
-    const { data: existing } = await supabase
-      .from("restaurants")
-      .select("id")
-      .eq("normalized_name", normalizedName)
-      .maybeSingle();
-
-    if (existing) {
-      targetRestaurantId = existing.id;
-    } else {
-      const { data: created, error: insertError } = await supabase
-        .from("restaurants")
-        .insert({ name: displayName, normalized_name: normalizedName })
-        .select("id")
-        .single();
-
-      if (insertError) {
-        if (insertError.code === "23505") {
-          const { data: raced } = await supabase
-            .from("restaurants")
-            .select("id")
-            .eq("normalized_name", normalizedName)
-            .single();
-
-          if (!raced) {
-            return { error: "Could not save restaurant. Please try again." };
-          }
-          targetRestaurantId = raced.id;
-        } else {
-          return { error: insertError.message };
-        }
-      } else {
-        targetRestaurantId = created.id;
-      }
-    }
+  if ("error" in restaurant) {
+    return { error: restaurant.error };
   }
 
   const visitedAtIso = new Date(`${visitedAt}T12:00:00`).toISOString();
@@ -167,7 +180,7 @@ export async function addVisit(
   const { data: visit, error: visitError } = await supabase
     .from("visits")
     .insert({
-      restaurant_id: targetRestaurantId,
+      restaurant_id: restaurant.restaurantId,
       visited_at: visitedAtIso,
       notes,
       address: location.address,
@@ -187,65 +200,41 @@ export async function addVisit(
   return { success: true, visitId: visit.id };
 }
 
-export async function updateVisitAddress(
+export async function updateVisit(
   visitId: string,
-  address: string,
-  lat?: number | null,
-  lng?: number | null,
+  input: {
+    restaurantName: string;
+    restaurantId?: string | null;
+    visitedAt: string;
+    notes?: string | null;
+    address?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    rating: number;
+  },
 ): Promise<{ error?: string }> {
   const trimmedVisitId = visitId.trim();
+  const rawName = input.restaurantName.trim();
+  const restaurantId = input.restaurantId?.trim() || null;
+  const visitedAt = input.visitedAt.trim();
+  const notesRaw = (input.notes ?? "").trim();
+  const notes = notesRaw || null;
+  const rawAddress = (input.address ?? "").trim();
+  const rating = parseRating(String(input.rating));
 
   if (!trimmedVisitId) {
     return { error: "Missing visit." };
   }
 
-  const auth = await requireAuthenticatedClient();
-
-  if ("error" in auth) {
-    return { error: auth.error };
+  if (!rawName) {
+    return { error: "Please enter a restaurant name." };
   }
 
-  const location = await resolveVisitLocation(
-    address,
-    lat ?? null,
-    lng ?? null,
-  );
-
-  if ("error" in location) {
-    return { error: location.error };
+  if (!visitedAt) {
+    return { error: "Please select a visit date." };
   }
 
-  const { supabase } = auth;
-
-  const { error } = await supabase
-    .from("visits")
-    .update({
-      address: location.address,
-      lat: location.lat,
-      lng: location.lng,
-    })
-    .eq("id", trimmedVisitId);
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  updateTag(TIMELINE_CACHE_TAG);
-  return {};
-}
-
-export async function updateVisitRating(
-  visitId: string,
-  rating: number,
-): Promise<{ error?: string }> {
-  const trimmedVisitId = visitId.trim();
-  const parsed = parseRating(String(rating));
-
-  if (!trimmedVisitId) {
-    return { error: "Missing visit." };
-  }
-
-  if (parsed == null) {
+  if (rating == null) {
     return { error: "Please select a rating from 1 to 5 stars." };
   }
 
@@ -256,16 +245,42 @@ export async function updateVisitRating(
   }
 
   const { supabase } = auth;
+  const location = await resolveVisitLocation(
+    rawAddress,
+    input.lat ?? null,
+    input.lng ?? null,
+  );
+
+  if ("error" in location) {
+    return { error: location.error };
+  }
+
+  const restaurant = await resolveRestaurantId(supabase, rawName, restaurantId);
+
+  if ("error" in restaurant) {
+    return { error: restaurant.error };
+  }
+
+  const visitedAtIso = new Date(`${visitedAt}T12:00:00`).toISOString();
 
   const { error } = await supabase
     .from("visits")
-    .update({ rating: parsed })
+    .update({
+      restaurant_id: restaurant.restaurantId,
+      visited_at: visitedAtIso,
+      notes,
+      address: location.address,
+      lat: location.lat,
+      lng: location.lng,
+      rating,
+    })
     .eq("id", trimmedVisitId);
 
   if (error) {
     return { error: error.message };
   }
 
+  updateTag(RESTAURANTS_CACHE_TAG);
   updateTag(TIMELINE_CACHE_TAG);
   return {};
 }
